@@ -13,7 +13,7 @@ from tornado.log import app_log
 ContainerConfig = namedtuple('ContainerConfig', [
     'image', 'command', 'mem_limit', 'cpu_quota', 'cpu_shares', 'container_ip',
     'container_port', 'container_user', 'host_network', 'host_directories',
-    'extra_hosts'
+    'extra_hosts', 'container_network'
 ])
 
 # Number of times to retry API calls before giving up.
@@ -136,9 +136,16 @@ class DockerSpawner():
         extra_hosts = dict(map(lambda h: tuple(h.split(':')),
                                container_config.extra_hosts))
 
+        if container_config.host_network:
+            network_mode='host'
+        elif container_config.container_network:
+            network_mode=container_config.container_network
+        else:
+            network_mode='bridge'
+
         host_config = dict(
             mem_limit=container_config.mem_limit,
-            network_mode='host' if container_config.host_network else 'bridge',
+            network_mode=network_mode,
             binds=volume_bindings,
             port_bindings=port_bindings,
             extra_hosts=extra_hosts,

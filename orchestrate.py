@@ -346,6 +346,11 @@ default docker bridge. Affects the semantics of container_port and container_ip.
         help=dedent("""
         Extra hosts for the containers, multiple hosts can be specified
         by using a comma-delimited string, specified in the form hostname:IP"""))
+    tornado.options.define('container_network', default=None,
+        help=dedent("""
+        Attaches the containers to the specified docker network 
+        instead of the default docker bridge. Probably affects the semantics of 
+        container_port and container_ip, similar to host_network."""))
 
     tornado.options.parse_command_line()
     opts = tornado.options.options
@@ -395,7 +400,8 @@ default docker bridge. Affects the semantics of container_port and container_ip.
         container_user=opts.container_user,
         host_network=opts.host_network,
         host_directories=opts.host_directories,
-        extra_hosts=opts.extra_hosts
+        extra_hosts=opts.extra_hosts,
+        container_network=opts.container_network
     )
 
     spawner = dockworker.DockerSpawner(docker_host,
