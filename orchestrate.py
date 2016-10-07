@@ -7,6 +7,7 @@ import os
 import re
 from textwrap import dedent
 import uuid
+import requests
 
 from concurrent.futures import ThreadPoolExecutor
 
@@ -85,9 +86,55 @@ class BaseHandler(RequestHandler):
     def api_token(self):
         return self.settings['api_token']
 
+    @property
+    def recaptcha_key(self):
+        return self.settings['recaptcha_key']
+
+    @property
+    def recaptcha_secret(self):
+        return self.settings['recaptcha_secret']
+
 class LoadingHandler(BaseHandler):
     def get(self, path=None):
         self.render("loading.html", is_user_path=self.is_user_path(path))
+
+
+class LandingHandler(BaseHandler):
+    def get(self):
+        self.render("landing.html", recaptcha_key=self.recaptcha_key)
+
+    def post(self):
+        captcha = self.get_body_argument('g-recaptcha-response', default=None)
+        if not captcha:
+            raise HTTPError(400)
+
+        url = 'https://www.google.com/recaptcha/api/siteverify'
+        r = requests.post(url, data={
+            'secret': self.recaptcha_secret,
+            'response': captcha,
+            'remoteip': self.request.remote_ip
+            })
+        response = r.json()
+        if response['success'] is not True:
+            raise HTTPError(403)
+
+        try:
+            url = self.pool.acquire().path
+            app_log.info("Allocated [%s] from the pool.", url)
+
+            app_log.debug("Redirecting [%s] -> [%s].", self.request.path, url)
+            self.redirect(url, permanent=False)
+        except spawnpool.EmptyPoolError:
+            app_log.warning("The container pool is empty!")
+            self.render("full.html", cull_period=self.cull_period)
+
+    @property
+    def pool(self):
+        return self.settings['pool']
+
+    @property
+    def cull_period(self):
+        return self.settings['cull_period']
 
 
 class APIStatsHandler(BaseHandler):
@@ -351,6 +398,13 @@ default docker bridge. Affects the semantics of container_port and container_ip.
         Attaches the containers to the specified docker network 
         instead of the default docker bridge. Probably affects the semantics of 
         container_port and container_ip, similar to host_network."""))
+    tornado.options.define('recaptcha_key', default=None,
+        help="Key for Google reCAPTCHA on landing page."
+    )
+    tornado.options.define('recaptcha_secret', default=None,
+        help="Secret for Google reCAPTCHA on landing page."
+    )
+
 
     tornado.options.parse_command_line()
     opts = tornado.options.options
@@ -370,9 +424,9 @@ default docker bridge. Affects the semantics of container_port and container_ip.
     # Only add human-facing handlers if there's no spawn API key set
     if api_token is None:
         handlers.extend([
-            (r"/", LoadingHandler),
-            (r"/spawn/?(/user/\w+(?:/.*)?)?", SpawnHandler),
-            (r"/spawn/((?:notebooks|tree|files)(?:/.*)?)", SpawnHandler),
+            (r"/", LandingHandler),
+            # (r"/spawn/?(/user/\w+(?:/.*)?)?", SpawnHandler),
+            # (r"/spawn/((?:notebooks|tree|files)(?:/.*)?)", SpawnHandler),
             (r"/(user/\w+)(?:/.*)?", LoadingHandler),
             (r"/((?:notebooks|tree|files)(?:/.*)?)", LoadingHandler),
             (r"/info/?", InfoHandler),
@@ -447,6 +501,8 @@ default docker bridge. Affects the semantics of container_port and container_ip.
         proxy_token=proxy_token,
         api_token=api_token,
         template_path=os.path.join(os.path.dirname(__file__), 'templates'),
+        recaptcha_key=opts.recaptcha_key,
+        recaptcha_secret=opts.recaptcha_secret,
         proxy_endpoint=proxy_endpoint,
         redirect_uri=opts.redirect_uri.lstrip('/'),
     )
