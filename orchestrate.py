@@ -119,7 +119,9 @@ class LandingHandler(BaseHandler):
             raise HTTPError(403)
 
         try:
-            url = self.pool.acquire().path
+            container_path = self.pool.acquire().path
+            redirect_path = self.redirect_uri
+            url = '/{}/{}'.format(container_path, redirect_path)
             app_log.info("Allocated [%s] from the pool.", url)
 
             app_log.debug("Redirecting [%s] -> [%s].", self.request.path, url)
@@ -135,6 +137,10 @@ class LandingHandler(BaseHandler):
     @property
     def cull_period(self):
         return self.settings['cull_period']
+
+    @property
+    def redirect_uri(self):
+        return self.settings['redirect_uri']
 
 
 class APIStatsHandler(BaseHandler):
