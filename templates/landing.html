@@ -6,35 +6,41 @@
   <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap-theme.min.css">
   <script src='https://www.google.com/recaptcha/api.js'></script>
 </head>
-<body>
-
-  <div class="jumbotron">
+<body style="background: #eee">
+  <div class="jumbotron" style="padding-bottom:0">
     <div id="main" class="container text-center">
       <h1>Aurum</h1>
       <h2>Data Discovery at Scale</h2>
-
-      <br>
-
+    </div>
+  </div>
+  <div class="container">
+    <div class="row col-xs-12 col-xs-offset-0 col-sm-8 col-sm-offset-2">
       <div id="message">
         <noscript>
           <p>You'll need JavaScript enabled to use this site!</p>
         </noscript>
 
-        <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod
-        tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam,
-        quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo
-        consequat.</p>    
+        <p>Organizations face a data discovery problem when their analysts spend more time finding relevant data than analyzing it. This problem has become common as: i) data is stored across multiple storage systems, from databases to data lakes; ii) data scientists do not operate within the limits of well-defined schemas, instead they want to find data across their organization to answer increasingly complex business questions.</p>
+
+        <p>We have built Aurum, a system to tackle data discovery problems at large. Aurum introduces a new discovery algebra, R2QL, that permits users to declare their intuition of what is relevant through a set of data primitives that expose the relations of the underlying data. The algebra relies on a metaschema graph to answer queries in human-scale latencies. Aurum is scalable: it builds the metaschema graph in linear time, despite the complexity of extracting complex relationships among thousands of data sources.</p>
       </div>
 
       <br>
 
-      <form method="post">
-        <p class="g-recaptcha text-center" style="display: inline-block" data-sitekey="{{recaptcha_key}}"></p>
-        <p>
-          <input type="submit" class="btn btn-lg btn-primary" name="submit" value="Try Demo" />
-        </p>
-      </form>
-
+      <div class="row text-center">
+        <form method="post">
+          <p class="g-recaptcha text-center" style="display: inline-block" data-sitekey="{{recaptcha_key}}"></p>
+          <br>
+          <br>
+          <p>
+            <input type="submit" class="btn btn-lg btn-primary" name="submit" value="Try Demo" />
+          </p>
+          <br>
+        </form>
+      </div>
+      <div class="row text-center">
+        <p>For more info, contact <a href="mailto:aurum-dev@mit.edu">aurum-dev@mit.edu</a>.</p>
+      </div>
     </div>
   </div>
 </body>
